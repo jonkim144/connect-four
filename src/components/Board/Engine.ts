@@ -5,10 +5,11 @@ export enum Difficulty {
 }
 
 export class Engine {
-  private static DEPTH_BY_DIFFICULTY: Map<Difficulty, number> = new Map<
-    Difficulty,
-    number
-  >([[Difficulty.EASY, 0], [Difficulty.MEDIUM, 1], [Difficulty.HARD, 2]]);
+  private static DEPTH_BY_DIFFICULTY: Object = {
+    [Difficulty.EASY]: 0,
+    [Difficulty.MEDIUM]: 4,
+    [Difficulty.HARD]: 6
+  };
 
   private pieces: Array<0 | 1 | 2>; // 0 is empty, 1 is red, 2 is yellow
   private isRedToMove: boolean;
@@ -66,11 +67,8 @@ export class Engine {
 
   getBestMove = () => {
     let moves = this.generateMoves();
-    if (this.difficulty === Difficulty.EASY) {
-      return this.shuffle(moves)[0];
-    }
-    let bestScore = Number.MIN_VALUE;
-    let bestMove = -1;
+    let bestScore = -99999999;
+    let bestMove = moves[0];
     moves.forEach(m => {
       this.makeMove(m);
       const score = -this.findBestMove(
@@ -88,9 +86,13 @@ export class Engine {
   private findBestMove = (depth: number) => {
     let moves = this.generateMoves();
     if (depth === 0) {
-      return moves.length === 0 ? (this.isRedToMove ? -999999 : 999999) : 0;
+      return moves.length === 0
+        ? this.isRedToMove
+          ? -999999
+          : 999999
+        : moves.length * 2;
     }
-    let bestScore = Number.MIN_VALUE;
+    let bestScore = -99999999;
     moves.forEach(m => {
       this.makeMove(m);
       bestScore = Math.max(bestScore, -this.findBestMove(depth - 1));
@@ -101,8 +103,9 @@ export class Engine {
 
   private undoMove = () => {
     const lastMove = this.moveHistory.pop();
-    if (lastMove) {
+    if (undefined !== lastMove) {
       this.pieces[lastMove] = 0;
+      this.isRedToMove = !this.isRedToMove;
     }
   }
 
@@ -119,11 +122,11 @@ export class Engine {
         }
       }
     }
-    return openSlots;
+    return this.shuffle(openSlots);
   }
 
   private isConnectFour = () => {
-    if (this.moveHistory.length === 0) {
+    if (this.moveHistory.length < 7) {
       return false;
     }
     const lastMove = this.moveHistory[this.moveHistory.length - 1];
