@@ -15,12 +15,14 @@ export default class Board extends React.PureComponent<
   private hardButton: HTMLButtonElement | null;
   private movedPieces: Array<SVGCircleElement | null>;
   private toggleComputerButton: HTMLButtonElement | null;
+  private processing: boolean;
 
   constructor(props: {}) {
     super(props);
     this.pieces = new Array<SVGCircleElement | null>();
     this.engine = new Engine();
     this.movedPieces = new Array<SVGCircleElement | null>();
+    this.processing = false;
     this.state = {
       gameStatus: '',
       isAIOn: true
@@ -61,7 +63,7 @@ export default class Board extends React.PureComponent<
         }
       });
     });
-    TweenLite.to(this.pieceToMove, 0, { alpha: 1 });
+    TweenLite.to(this.pieceToMove, 0, { alpha: 1, fill: '#FA4A2A' });
     this.movedPieces = new Array<SVGCircleElement | null>();
     this.setState({ gameStatus: '' });
   }
@@ -136,6 +138,9 @@ export default class Board extends React.PureComponent<
   }
 
   tryMakeMoveAt = (columnIndex: number, isUserMove: boolean = false) => {
+    if (this.processing && isUserMove) {
+      return;
+    }
     if (this.engine.isGameOver()) {
       return;
     }
@@ -155,6 +160,7 @@ export default class Board extends React.PureComponent<
       TweenLite.to(this.pieceToMove, 0, { alpha: 0 });
       this.setState({ gameStatus: `${isRed ? 'Red' : 'Yellow'} wins!` });
     }
+    this.processing = true;
     TweenLite.to(pieceToTween, 0.3, {
       y: 100 * (6 - rowIndex),
       fill,
@@ -163,6 +169,7 @@ export default class Board extends React.PureComponent<
         if (isUserMove && this.state.isAIOn) {
           this.tryMakeMoveAt(this.engine.getBestMove());
         }
+        this.processing = false;
       }
     });
   }
@@ -268,6 +275,56 @@ export default class Board extends React.PureComponent<
             return columns;
           })()}
         </svg>
+        <div style={{ marginTop: 5, userSelect: 'none' }}>
+          <button
+            onClick={this.handleClickEasy}
+            ref={e => (this.easyButton = e)}
+            style={{
+              borderRadius: 10,
+              fontFamily: 'Consolas',
+              fontWeight: 'bold',
+              fontSize: 12,
+              color: 'white',
+              backgroundColor: 'black',
+              width: 100,
+              height: 40
+            }}
+          >
+            Easy
+          </button>{' '}
+          <button
+            onClick={this.handleClickMedium}
+            ref={e => (this.mediumButton = e)}
+            style={{
+              borderRadius: 10,
+              fontFamily: 'Consolas',
+              fontWeight: 'bold',
+              fontSize: 12,
+              color: 'black',
+              backgroundColor: 'white',
+              width: 100,
+              height: 40
+            }}
+          >
+            Medium
+          </button>{' '}
+          <button
+            onClick={this.handleClickHard}
+            ref={e => (this.hardButton = e)}
+            style={{
+              borderRadius: 10,
+              fontFamily: 'Consolas',
+              fontWeight: 'bold',
+              fontSize: 12,
+              color: 'black',
+              backgroundColor: 'white',
+              width: 100,
+              height: 40
+            }}
+          >
+            Hard
+          </button>
+        </div>
         <div style={{ marginTop: 5, userSelect: 'none' }}>
           <button
             onClick={this.handleClickNewGame}
